@@ -1,0 +1,392 @@
+---
+title: "Final Project_727"
+author: "Nour Fakhoury"
+date: "2023-12-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+install.packages("gtrendsR")
+install.packages("tidyverse")
+install.packages("mapdata")
+install.packages("stadiamaps")
+install.packages(c("ggplot2", "maps", "mapdata", "dplyr", "ggrepel", "plotly"))
+install.packages("ggvis")
+install.packages("usmap")
+install.packages("sf")
+```
+
+```{r}
+library(gtrendsR)
+library(tidyverse)
+library(censusapi)
+library(magrittr)
+library(factoextra)
+library(dplyr)
+library(plotly)
+library(ggplot2)
+library(maps)
+library(mapdata)
+library(dplyr)
+library(ggrepel)
+library(ggvis)
+library(usmap)
+library(ggplot2)
+library(sf)
+```
+
+
+```{r}
+res2<-gtrends(c("Free Palestine", "Genocide", "Hostages", "Protest"),
+       geo="US",
+       time = "2023-9-30 2023-12-1",
+       low_search_volume = TRUE)
+```
+
+
+```{r}
+res5<-gtrends(c("Free Palestine", "Israel comitting Genocide", "Hostages", "Protest"),
+       geo="US",
+       time = "2023-9-30 2023-12-1",
+       low_search_volume = TRUE)
+```
+
+
+
+```{r}
+plot(res5)
+```
+
+```{r}
+res1<-gtrends(c("Free Palestine", "Genocide", "Hostages", "Pro Palestine Protest", "Antisemitism"),
+       geo="US",
+       time = "2023-9-30 2023-12-1",
+       low_search_volume = TRUE)
+```
+
+```{r}
+plot(res1)
+```
+
+```{r}
+plot(res1)
+```
+
+
+#week from date
+
+
+```{r}
+IOT<-res1$interest_over_time %>%
+ mutate(week = week(date))
+```
+
+```{r}
+week<- week(IOT$date)
+```
+
+
+
+
+```{r}
+IOT1<-spread(IOT, key=keyword, value=hits)
+```
+
+```{r}
+graph<-ggplot(IOT1, aes(x=week, y=Hostages )) +
+geom_point()
+smooth
+
+ggplotly(graph)
+```
+
+```{r}
+state<-res1$interest_by_region
+```
+
+```{r}
+bystate<-spread(state, key=keyword, value=hits)
+```
+
+```{r}
+bounds<-us_state_boundaries
+```
+
+```{r}
+bounds$location<-bounds$name
+```
+
+```{r}
+joined <- bystate %>%
+  left_join(bounds, by = c("location"))
+```
+
+
+
+
+```{r}
+joined$`Pro Palestine Protest`[is.na(joined$`Pro Palestine Protest`)]<-0
+```
+
+
+
+```{r}
+avg_search <- joined %>%
+  group_by(Affl) %>%
+  summarize(
+    
+    avg_Pro_Palestine_Protest = mean(`Pro Palestine Protest`),
+    avg_Free_Palestine = mean(`Free Palestine`),
+    avg_Genocide = mean(Genocide),
+    avg_Hostages = mean(Hostages),
+    ave_Antisemitism = mean(Antisemitism),
+    
+    
+  )
+```
+
+```{r}
+avg_search_long <- tidyr::gather(avg_search, key = "Keyword", value = "Average_Search", -Affl)
+```
+
+
+```{r}
+ggplot(avg_search_long, aes(x = Keyword, y = Average_Search)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Average Keyword Search Numbers",
+       x = "Keyword",
+       y = "Average Search Numbers")
+```
+```{r}
+affl_colors <- c(D = "blue", R = "red", N = "purple")
+```
+
+# Create the bar plot
+```{r}
+ggplot(avg_search_long, aes(x = Keyword, y = Average_Search, fill = Affl)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = affl_colors) +  # Set manual colors
+  labs(title = "Average Keyword Search Numbers by Political Affiliation",
+       x = "Keyword",
+       y = "Average Search Numbers")
+```
+
+```{r}
+scale(joined1$long, joined1$lat)
+```
+```{r}
+avg_searchbystate <- joined %>%
+  group_by(location) %>%
+  summarize(
+    
+    avg_Pro_Palestine_Protest = mean(`Pro Palestine Protest`),
+    avg_Free_Palestine = mean(`Free Palestine`),
+    avg_Genocide = mean(Genocide),
+    avg_Hostages = mean(Hostages),
+    ave_Antisemitism = mean(Antisemitism),
+    long = long,
+    lat = lat,
+    Affl = Affl
+  )
+```
+
+```{r}
+avg_search_longBS <- tidyr::gather(avg_searchbystate, key = "Keyword", value = "Average_Searchbystate", -Affl)
+```
+
+```{r}
+joined2<-
+joined1%>%
+  summarise(
+    mean_long = mean(long),
+    mean_lat = mean(lat))
+```
+
+
+```{r}
+ggplot(, aes(x = lat, y = long, group = Affl, fill = location$keyword)) + geom_polygon(color = "white", linewidth = 0.5) + scale_fill_manual(values = c("green", "blue", "purple", "yellow", "red"), name = "keyword") + theme_minimal() + labs(title = "Keywords")
+```
+
+```{r}
+ggplot(data=avg_search_long) +
+  geom_boxplot(mapping=aes(x=Keyword, y=Average_Search))
+```
+
+```{r}
+ggplot(data=avg_search_long) +
+  geom_density(mapping=aes(x=Average_Search, color = Keyword))
+```
+
+```{r}
+ggplot(data = avg_search_long, mapping = aes(x=Keyword, y=Average_Search))+
+geom_point(mapping=aes(color=Affl))
+geom_smooth()
+```
+
+```{r}
+map_data <- fortify(maps::map("state", fill = TRUE, plot = FALSE))
+```
+
+```{r}
+joined <- map_data %>%
+  left_join(avg_searchbystate, by = c("location"))
+```
+
+```{r}
+ggplot() +
+  geom_polygon(data = avg_searchbystate, 
+           aes(avg_searchbystate, x = long, y=lat, group = location),
+           fill = "white", color = "black", size = 0.2) +
+  geom_text_repel(data = avg_searchbystate,
+                  aes(x = long, y = lat, label = "Free Palestine"),
+                  size = 2, color = "blue") 
+```
+
+scale(avg_searchbystate$long,avg_searchbystate$lat)
+```{r}
+plot_usmap(location = "avg_searchbystate$'Pro Palestine Protest") + 
+  labs(title = "US Pro Palestine Protest Keyword Searches",
+       ) + 
+  theme(panel.background = element_rect(color = "black", fill = "lightblue"))
+```
+```{r}
+plot_usmap(data = avg_searchbystate , values = "avg_Free_Palestine", color = "red") + 
+  scale_fill_continuous(name = "Free_Palestine Searches", label = scales::comma) + 
+  theme(legend.position = "right")
+```
+```{r}
+plot_usmap(data = avg_searchbystate , values = "avg_Genocide", color = "green") + 
+  scale_fill_continuous(name = "Genocide Searches", label = scales::comma) + 
+  theme(legend.position = "right")
+```
+
+```{r}
+plot_usmap(data = avg_searchbystate , values = "ave_Antisemitism", color = "yellow") + 
+  scale_fill_continuous(name = "Antisemitism Searches", label = scales::comma) + 
+  theme(legend.position = "right")
+```
+```{r}
+plot_usmap(data = avg_searchbystate , values = "avg_Hostages", color = "orange") + 
+  scale_fill_continuous(name = "Hostages Searches", label = scales::comma) + 
+  theme(legend.position = "right")
+```
+```{r}
+plot_usmap(data = avg_searchbystate , values = "avg_Pro_Palestine_Protest", color = "white") + 
+  scale_fill_continuous(name = "Pro Palestine Protest Searches", label = scales::comma) + 
+  theme(legend.position = "right")
+```
+## Hierarchical Clustering
+
+
+
+```{r}
+hclust_data <-
+  avg_searchbystate %>%
+  select(long, lat, avg_Pro_Palestine_Protest, avg_Free_Palestine, avg_Genocide, avg_Hostages, ave_Antisemitism) %>%
+  mutate_all(scale)
+```
+
+```{r}
+hclust_d <- dist(hclust_data)
+hclust_d
+```
+```{r}
+hc_complete <- hclust(hclust_d, method = "complete")
+hc_average <- hclust(hclust_d, method = "average")
+hc_ward <- hclust(hclust_d, method = "ward.D2")
+```
+Plot the dendrogram to find a reasonable number of clusters. Draw boxes around the clusters of your cluster solution.
+```{r}
+plot(hc_complete, main = "Complete Linkage", xlab = "", sub = "")
+plot(hc_average, main = "Average Linkage", xlab = "", sub = "")
+plot(hc_ward, main = "Ward", xlab = "", sub = "")
+
+rect.hclust(hc_ward, 
+            k = 4, 
+            border = "red")
+```
+
+```{r}
+
+cluster<-cutree(hc_ward, 4)
+
+```
+
+
+
+```{r}
+fviz_nbclust(hclust_data, #data set we want to use
+             kmeans, #cluster method
+             method = "wss", #method used for estimating the optimal number of clusters
+             k.max = 25)
+```
+
+```{r}
+
+km <- kmeans(hclust_data, 4, nstart = 20)
+table(km$cluster)
+
+```
+
+
+```{r}
+avg_searchbystate %>%
+  mutate(cluster = km$cluster) %>%
+  group_by(cluster) %>%
+  summarise(
+    mean_long = mean(long),
+    mean_lat = mean(lat),
+    mean_Pro_Palestine_Protest = mean(avg_Pro_Palestine_Protest),
+    mean_Genocide = mean(avg_Genocide),
+    mean_Antisemitism = mean(ave_Antisemitism),
+    mean_Pro_Palestine = mean(avg_Free_Palestine),
+    mean_Hostages = mean(avg_Hostages),
+    location = names(table(location))[which.max(table(location))]
+  )
+
+```
+```{r}
+ave_sbs_cluster = avg_searchbystate %>%
+  mutate(cluster = km$cluster)
+
+```
+
+```{r}
+us_states$location<-us_states$NAME
+```
+
+```{r}
+ave_sbs_cluster_map <- ave_sbs_cluster %>%
+  left_join(us_states, by = c("location"))
+```
+
+```{r}
+us_states <- st_read("/Users/nourfakhoury/Downloads/tl_2023_us_state/tl_2023_us_state.shp")
+```
+
+
+```{r}
+ggplot(ave_sbs_cluster_map) + 
+ geom_polygon(data = ave_sbs_cluster_map, aes(x = long, y = lat, group= cluster, fill= cluster)) 
+```
+
+```{r}
+ggplot(ave_sbs_cluster_map, aes(x = long , y = lat , group = cluster, fill = as.factor (cluster))) + geom_polygon(color = "black", linewidth = 0.5) + scale_fill_manual(values = c("#66c2a5", "#fc8d62", "#8da0cb", "yellow"), name = "Cluster") + theme_minimal() + labs(title = "US State ")
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = ave_sbs_cluster_map, aes(fill = as.factor(cluster)))
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = ave_sbs_cluster_map, aes(fill = as.factor(cluster), geometry = geometry)) +
+  scale_fill_manual(values = c("#66c2a5", "#fc8d62", "#8da0cb", "yellow"), name = "Cluster") +
+  theme_minimal() +
+  labs(title = "US State Clusters")
+```
