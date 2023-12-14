@@ -41,35 +41,10 @@ library(sf)
 
 
 ```{r}
-res2<-gtrends(c("Free Palestine", "Genocide", "Hostages", "Protest"),
-       geo="US",
-       time = "2023-9-30 2023-12-1",
-       low_search_volume = TRUE)
-```
-
-
-```{r}
-res5<-gtrends(c("Free Palestine", "Israel comitting Genocide", "Hostages", "Protest"),
-       geo="US",
-       time = "2023-9-30 2023-12-1",
-       low_search_volume = TRUE)
-```
-
-
-
-```{r}
-plot(res5)
-```
-
-```{r}
 res1<-gtrends(c("Free Palestine", "Genocide", "Hostages", "Pro Palestine Protest", "Antisemitism"),
        geo="US",
        time = "2023-9-30 2023-12-1",
        low_search_volume = TRUE)
-```
-
-```{r}
-plot(res1)
 ```
 
 ```{r}
@@ -174,10 +149,11 @@ ggplot(avg_search_long, aes(x = Keyword, y = Average_Search, fill = Affl)) +
        x = "Keyword",
        y = "Average Search Numbers")
 ```
-
+#scaling lat and long
 ```{r}
 scale(joined1$long, joined1$lat)
 ```
+#creating new variables that include the means of each search word
 ```{r}
 avg_searchbystate <- joined %>%
   group_by(location) %>%
@@ -194,9 +170,7 @@ avg_searchbystate <- joined %>%
   )
 ```
 
-```{r}
-avg_search_longBS <- tidyr::gather(avg_searchbystate, key = "Keyword", value = "Average_Searchbystate", -Affl)
-```
+
 
 ```{r}
 joined2<-
@@ -207,9 +181,7 @@ joined1%>%
 ```
 
 
-```{r}
-ggplot(, aes(x = lat, y = long, group = Affl, fill = location$keyword)) + geom_polygon(color = "white", linewidth = 0.5) + scale_fill_manual(values = c("green", "blue", "purple", "yellow", "red"), name = "keyword") + theme_minimal() + labs(title = "Keywords")
-```
+
 
 ```{r}
 ggplot(data=avg_search_long) +
@@ -231,28 +203,13 @@ geom_smooth()
 map_data <- fortify(maps::map("state", fill = TRUE, plot = FALSE))
 ```
 
-```{r}
-joined <- map_data %>%
-  left_join(avg_searchbystate, by = c("location"))
-```
+
+
 
 ```{r}
-ggplot() +
-  geom_polygon(data = avg_searchbystate, 
-           aes(avg_searchbystate, x = long, y=lat, group = location),
-           fill = "white", color = "black", size = 0.2) +
-  geom_text_repel(data = avg_searchbystate,
-                  aes(x = long, y = lat, label = "Free Palestine"),
-                  size = 2, color = "blue") 
-```
-
 scale(avg_searchbystate$long,avg_searchbystate$lat)
-```{r}
-plot_usmap(location = "avg_searchbystate$'Pro Palestine Protest") + 
-  labs(title = "US Pro Palestine Protest Keyword Searches",
-       ) + 
-  theme(panel.background = element_rect(color = "black", fill = "lightblue"))
 ```
+
 ```{r}
 plot_usmap(data = avg_searchbystate , values = "avg_Free_Palestine", color = "red") + 
   scale_fill_continuous(name = "Free_Palestine Searches", label = scales::comma) + 
@@ -369,19 +326,6 @@ us_states <- st_read("/Users/nourfakhoury/Downloads/tl_2023_us_state/tl_2023_us_
 ```
 
 
-```{r}
-ggplot(ave_sbs_cluster_map) + 
- geom_polygon(data = ave_sbs_cluster_map, aes(x = long, y = lat, group= cluster, fill= cluster)) 
-```
-
-```{r}
-ggplot(ave_sbs_cluster_map, aes(x = long , y = lat , group = cluster, fill = as.factor (cluster))) + geom_polygon(color = "black", linewidth = 0.5) + scale_fill_manual(values = c("#66c2a5", "#fc8d62", "#8da0cb", "yellow"), name = "Cluster") + theme_minimal() + labs(title = "US State ")
-```
-
-```{r}
-ggplot() +
-  geom_sf(data = ave_sbs_cluster_map, aes(fill = as.factor(cluster)))
-```
 
 ```{r}
 ggplot() +
@@ -390,3 +334,8 @@ ggplot() +
   theme_minimal() +
   labs(title = "US State Clusters")
 ```
+
+
+
+
+
